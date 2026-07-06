@@ -1,0 +1,34 @@
+#URL與檔案路徑大小寫問題
+Windows的路徑可以相容大小寫
+Linux則是會嚴格限制大小寫
+
+可以的話建議路徑命名都採小寫與底線會比較好一點
+EX:
+檔案名稱
+資料夾名稱
+Controller/action
+view命名
+(Model或C#其他Class本來就會嚴格限制大小寫,所以還好)
+
+不行的話,至少要在Linux測試過確定路徑都正確,沒有404錯誤紀錄
+===========================================
+#System.Drawing無法正常使用
+System.Drawing依賴 Windows 的 GDI+。Linux 預設沒有這個東西，會導致產生圖片時崩潰
+原本查過資料建議安裝 Linux 版的 GDI+ 相容庫：
+sudo apt update
+sudo apt install -y libgdiplus
+但是還是噴錯
+
+如果沒有用到太多的話,建議Drawing套件改掉,改用SkiaSharp
+# nuget安裝
+# 核心庫
+dotnet add package SkiaSharp
+# Linux 運作所需的底層封裝 (裝了這個就不用手動在 Ubuntu 裝 libskia)
+dotnet add package SkiaSharp.NativeAssets.Linux.NoDependencies
+
+===========================================
+#「射後不理 (Fire-and-forget)」的非同步程式在Linux/Kestrel環境下會明顯發生
+
+在Windows/IIS下,其實遇到非同步程式,會稍微等一下他們執行結束,所以不會注意到
+但是在Linux/Kestrel下,不會有這樣的等待動作
+這會讓使用了async且未使用await的程式碼來不及跑完

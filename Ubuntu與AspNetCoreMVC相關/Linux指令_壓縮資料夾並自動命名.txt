@@ -1,0 +1,2 @@
+rem 壓縮資料夾,並自動命名
+tar -zcvf /var/www/website1/back/backup_$(date +%Y%m%d_%H%M%S).tar.gz /var/www/website1/publish/

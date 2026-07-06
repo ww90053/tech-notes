@@ -1,0 +1,43 @@
+k8s-deployment.yaml
+├── apiVersion: apps/v1              # 【API 版本】指定 K8s API 群組（此處為部署專用的 apps/v1）
+├── kind: Deployment                 # 【資源種類】告訴 K8s 這次要建立一個「部署控制器」
+├── metadata:                        # 【元數據】定義此資源的身份識別資訊
+│   ├── name: my-app-deployment      #   └─ 這個 Deployment 的唯一名稱
+│   ├── namespace: default           #   └─ 所屬的命名空間（邏輯隔離空間，預設為 default）
+│   └── labels:                      #   └─ 貼在 Deployment 上的分類標籤（鍵值對）
+│       └── app: my-web-app
+└── spec:                            # 【控制規格】定義這個 Deployment 預期要達到的狀態
+    ├── replicas: 3                  #   └─ 副本數量：維持同時運行的 Pod 數量隨時為 3 個
+    ├── selector:                    #   └─ 標籤選擇器：Deployment 用來「認親」與管理 Pod 的機制
+    │   └── matchLabels:
+    │       └── app: my-web-app      #      └─ 必須與下方 Pod 模板（template）的標籤完全一致！
+    └── template:                    # 【Pod 模板】當需要產生新 Pod 時，會照著這個藍圖刻出來
+        ├── metadata:
+        │   └── labels:
+        │       └── app: my-web-app  #      └─ 生產出來的 Pod 會被貼上的標籤（用於被 selector 追蹤）
+        └── spec:                    # 【Pod 規格】定義 Pod 內部容器與環境的詳細設定
+            ├── containers:              #   └─ 容器列表：一個 Pod 內可以包含多個容器（陣列結構）
+            │   ├── [0]:                 #       【主容器】（陣列的第一個項目）
+            │   │   ├── name: web-container       # 容器自訂名稱
+            │   │   ├── image: nginx:1.25         # 要使用的 Docker 映像檔與版本
+            │   │   ├── imagePullPolicy: IfNotPresent # 映像檔下載策略（優先使用本地，沒有才下載）
+            │   │   ├── ports:                    # 網路埠口宣告
+            │   │   │   └── [0]:
+            │   │   │       └── containerPort: 80 # 容器內應用程式監聽的 Port（例如 Nginx 預設聽 80）
+            │   │   ├── resources:                # 資源配額與限制（防止壞程式吃光整台機器的資源）
+            │   │   │   ├── requests:             #  └─ 資源請求：K8s 保證分配給該容器的「最低標準」
+            │   │   │   │   ├── memory: "64Mi"    #     └─ 記憶體最低保障 64 Mebibytes
+            │   │   │   │   └── cpu: "250m"       #     └─ CPU 最低保障 0.25 顆（250 millicores）
+            │   │   │   └── limits:               #  └─ 資源限制：允許該容器使用的「最高上限」
+            │   │   │       ├── memory: "128Mi"   #     └─ 記憶體最高 128Mi，超過會被直接殺掉並重啟
+            │   │   │       └── cpu: "500m"       #     └─ CPU 最高 0.5 顆，超過會被限速但不會被殺
+            │   │   └── env:                      # 環境變數注入（讓程式碼與設定值分離）
+            │   │       └── [0]:
+            │   │           ├── name: DB_HOST     #  └─ 變數名稱
+            │   │           └── value: "db.local" #  └─ 變數值（程式內部讀取 DB_HOST 就會得到這個值）
+            │   │
+            │   └── [1]:                 #       【輔助容器】（陣列的第二個項目，即 Sidecar 模式）
+            │       ├── name: log-agent           # 輔助容器名稱（例如專門用來收集日誌的代理程式）
+            │       └── image: fluentd:latest     # 輔助容器使用的映像檔
+            │
+            └── restartPolicy: Always     # 【重啟策略】當 Pod 內的容器死掉時，一律自動重新啟動

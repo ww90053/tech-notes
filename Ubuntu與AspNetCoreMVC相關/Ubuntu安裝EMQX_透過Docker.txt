@@ -1,0 +1,75 @@
+前提，已經安裝好了 Docker 環境
+架設 EMQX（目前最流行的開源 MQTT Broker）
+
+以下是標準的架設步驟：
+
+1. 拉取 EMQX 映像檔
+首先，從 Docker Hub 下載 EMQX 的最新穩定版本：
+
+#Bash
+sudo docker pull emqx/emqx:latest
+2. 啟動 EMQX 容器
+執行以下指令來啟動容器。這個指令會映射幾個重要的連接埠（Port）：
+
+#Bash
+sudo docker run -d --name emqx \
+  -p 1883:1883 \
+  -p 8083:8083 \
+  -p 8084:8084 \
+  -p 8883:8883 \
+  -p 18083:18083 \
+  emqx/emqx:latest
+連接埠說明：
+
+1883：MQTT 協議埠（非加密）。
+
+8883：MQTT over SSL/TLS（加密）。
+
+8083：MQTT over WebSocket。
+
+18083：Dashboard 管理控制台（最重要的後台介面）。
+
+3. 進入 Dashboard 管理介面
+當容器啟動後，你可以透過瀏覽器存取 EMQX 的圖形化管理後台：
+
+網址：http://你的伺服器IP:18083
+
+預設帳號：admin
+
+預設密碼：public
+
+注意：第一次登入後，系統會強制要求你修改預設密碼，請務必記好新密碼。
+
+4. 進階建議：使用 Docker Compose (推薦)
+如果你希望以後更方便管理（例如掛載資料夾存放設定，避免容器刪除後資料消失），建議建立一個 docker-compose.yml 檔案：
+
+YAML
+version: '3'
+services:
+  emqx:
+    image: emqx/emqx:latest
+    container_name: emqx
+    ports:
+      - "1883:1883"
+      - "8883:8883"
+      - "8083:8083"
+      - "8084:8084"
+      - "18083:18083"
+    volumes:
+      - ./emqx_data:/opt/emqx/data
+      - ./emqx_log:/opt/emqx/log
+    restart: always
+然後在該目錄執行：
+
+Bash
+docker compose up -d
+5. 測試連線
+你可以使用 MQTTX（EMQX 官方出的桌面客戶端）或是簡易的 mosquitto_pub 工具來測試：
+
+Bash
+# 發送測試訊息
+docker run --rm --network host eclipse-mosquitto mosquitto_pub -h localhost -t "test/topic" -m "Hello EMQX"
+常見問題小提醒：
+防火牆：如果是在雲端主機（如 AWS, GCP, Azure）上架設，記得要在安全組（Security Group）開啟 1883 與 18083 連接埠。
+
+效能優化：對於 Ubuntu，如果連線數很大，記得調整系統的 ulimit（最大檔案開啟數限制）。

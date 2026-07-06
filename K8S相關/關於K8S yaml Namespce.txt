@@ -1,0 +1,27 @@
+因為要安裝的服務很多,所以.yaml設定檔案裏面,可以宣告這項服務屬於哪種namespace
+```
+metadata:
+  # 設定 ConfigMap 名稱，供 information-system Deployment 參照
+  name: information-system-config
+  # 指定 ConfigMap 所在命名空間
+  namespace: icc-prod
+```
+如果沒有宣告,預設會是default
+自訂namespace優點:
+- 多了namespace可以和其他服務區分,如果服務非常多,可以透過namespace區分彼此
+自訂namespace缺點:
+- 大多數指令需要再額外下 -n 你宣告的namespace
+
+
+---
+namespace必須先在K8S註冊
+步驟
+- 準備好namespace.yaml,請參考:範本_namespace.yaml
+```
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: icc-prod
+```
+- 執行指令 kubectl apply -f .\namespace.yaml
+- 檢查 kubectl get namespace,有出現代表成功

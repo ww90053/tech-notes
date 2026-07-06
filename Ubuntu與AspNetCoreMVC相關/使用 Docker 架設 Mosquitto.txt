@@ -1,0 +1,50 @@
+如何使用 Docker 架設 Mosquitto
+Mosquitto 預設不允許匿名連線且不監聽外部網路，
+所以直接跑 docker run 通常會連不上。你必須準備一個設定檔。
+
+1. 建立資料夾與設定檔
+在 Ubuntu 中執行：
+
+#Bash
+mkdir -p ~/mosquitto/config ~/mosquitto/data ~/mosquitto/log
+nano ~/mosquitto/config/mosquitto.conf
+
+2. 編輯 mosquitto.conf
+將以下內容貼入檔案中（這是最基本的「開啟外部連線」設定）：
+
+程式碼片段
+# 監聽埠
+listener 1883
+# 允許匿名連線 (測試用，正式環境請關閉並設密碼)
+allow_anonymous true
+
+# 資料與日誌存放路徑
+persistence true
+persistence_location /mosquitto/data/
+log_dest file /mosquitto/log/mosquitto.log
+
+3. 使用 Docker Run 啟動
+#Bash
+sudo docker run -d --name mosquitto \
+  --restart always \
+  -p 1883:1883 \
+  -v ~/mosquitto/config:/mosquitto/config \
+  -v ~/mosquitto/data:/mosquitto/data \
+  -v ~/mosquitto/log:/mosquitto/log \
+  eclipse-mosquitto
+如果改用 Docker Compose (推薦)
+如果你習慣用 Compose 管理，檔案內容如下：
+
+YAML
+services:
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mosquitto
+    restart: always
+    ports:
+      - "1883:1883"
+      - "9001:9001" # WebSocket 用
+    volumes:
+      - ./config:/mosquitto/config
+      - ./data:/mosquitto/data
+      - ./log:/mosquitto/log

@@ -1,0 +1,93 @@
+1. 安裝 PostgreSQL
+開啟終端機並執行以下指令，從 Ubuntu 的預設軟體源安裝最新穩定版： 
+# 更新apt
+sudo apt update
+
+# 安裝PostgreSQL包含一些額外的實用工具和功能擴充
+sudo apt install postgresql postgresql-contrib
+
+=====
+補充:
+apt會自動根據作業系統版本,判斷postgresql安裝的版本
+如果ubuntu版本不是最新版,則postgresql安裝的版本可能也不會是最新的
+
+=====
+
+2. 設定資料庫的管理使用者
+安裝完成後，PostgreSQL 會建立一個名為 postgres 的OS系統使用者與資料庫管理員帳號。
+PostgreSQL 在 Ubuntu 上預設使用的是 「Peer Authentication」 機制
+只要在Ubuntu 上是以 postgres 這個OS系統使用者的身份登入，它就完全不需要密碼。
+
+建議為資料庫建立新的管理使用者，而非直接使用 postgres 帳號。
+
+# 切換至 postgres 使用者：
+sudo -i -u postgres
+
+# 建立新帳號
+# 在 postgres 使用者身份下執行
+createuser --interactive
+=====
+後續會有一串指引,引導你建立帳號
+Enter name of role to add:
+你要新增的使用者名稱是什麼？ (例如輸入 my_app)
+Shall the new role be a superuser? (y/n)
+這個人要當管理員嗎？
+
+但是這個動作只會新增帳號,不會幫你設定密碼
+設定密碼則是得用SQL指令進行
+=====
+# 進入 PostgreSQL 終端機 (psql)：
+psql
+# 退出 psql：輸入 \q 並按下 Enter。
+
+# 設定帳號密碼
+ALTER USER 剛才建立的帳號名稱 WITH PASSWORD '你的密碼';
+
+=====
+補充:另外一個方法,但我沒測過
+# 在 postgres 使用者身份下執行
+sudo -u postgres
+createuser --pwprompt --encrypted 帳號名稱
+=====
+
+
+3. 啟用資料庫可被遠端連線
+postgresql預設設定只允許localhost連線
+若需要從其他主機連線，需修改設定檔：
+修改接聽地址 /etc/postgresql/版本號/main/postgresql.conf
+修改連線權限 /etc/postgresql/版本號/main/pg_hba.conf，新增允許連線的 IP 位址。
+
+另外一個問題是,修改這兩個檔案得有OS管理者權限操作,所以無法從GUI隨便開啟文字編輯器改
+
+# 以管理者權限,用nano修改設定檔案postgresql.conf
+# sudo nano /etc/postgresql/版本號/main/postgresql.conf
+sudo nano /etc/postgresql/16/main/postgresql.conf
+
+找到listen_addresses將這段修改
+#listen_addresses = 'localhost'
+如果要全開,改為
+listen_addresse = '*'
+如果要指定IP開放,改為
+listen_addresse = 'xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx'
+
+
+# 以管理者權限,用nano修改設定檔案pg_hba.conf
+# sudo nano /etc/postgresql/版本號/main/pg_hba.conf
+sudo nano /etc/postgresql/16/main/pg_hba.conf
+
+找到這幾行：
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            scram-sha-256
+
+在下方追加需要開放的IP
+# IP完全一樣
+host    all             all             192.168.1.30/32            scram-sha-256
+# 只有指定 192.168.X.X
+host    all             all             192.168.0.0/16            scram-sha-256
+# 全開
+host    all             all             0.0.0.0/0            scram-sha-256
+
+
+重啟服務：執行 
+sudo systemctl restart postgresql
+

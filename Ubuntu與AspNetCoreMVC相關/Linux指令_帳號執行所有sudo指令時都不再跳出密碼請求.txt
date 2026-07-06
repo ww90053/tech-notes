@@ -1,0 +1,9 @@
+讓目前的帳號「完全免密碼」
+這會讓您的帳號執行所有 sudo 指令時都不再跳出密碼請求。
+執行指令：
+sudo visudo
+
+移動到檔案最下方，加入這一行（請將 user 換成您的帳號）：
+user ALL=(ALL) NOPASSWD: ALL
+
+按下 Ctrl + O 儲存，再按 Enter 確認，最後 Ctrl + X 離開。

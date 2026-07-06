@@ -1,0 +1,45 @@
+https://ithelp.ithome.com.tw/articles/10278252
+
+在 Ubuntu 上安裝 Docker 其實非常直觀，最推薦的方法是透過 Docker 官方的套件庫（Repository）進行安裝，這樣可以確保你獲得的是最新版本。
+
+以下是標準的安裝流程：
+
+1. 更新系統並安裝必要工具
+首先，打開終端機並更新現有的套件清單，確保系統具備 HTTPS 傳輸的能力。
+
+#Bash
+sudo apt update
+#安裝
+#ca-certificates「全球信任的機構白名單」
+#curl
+#gnupg
+sudo apt install ca-certificates curl gnupg lsb-release
+
+2. 加入 Docker 官方的 GPG 金鑰
+金鑰是用來驗證下載軟體包的安全性的。
+
+#Bash
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+3. 設定 Docker 套件庫
+將 Docker 的下載來源加入到你的 APT 來源清單中。
+
+#Bash
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+4. 正式安裝 Docker
+更新索引後，安裝 Docker Engine、指令列工具以及 Containerd。
+
+#Bash
+sudo apt update
+sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+5. 驗證安裝是否成功
+執行 hello-world 映像檔來測試，如果看到 "Hello from Docker!" 的字樣，就代表大功告成了。
+
+#Bash
+sudo docker run hello-world

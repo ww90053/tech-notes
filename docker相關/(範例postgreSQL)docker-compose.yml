@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: postgres_container
+    restart: always
+    environment:
+      # 只需要帳號與密碼，這是管理員登入必備的
+      # 其實還能夠設定預設資料庫，但這段建議省略，等服務建立起來之後再說
+      POSTGRES_USER: iscom
+      POSTGRES_PASSWORD: 7o598966
+    ports:
+      - "5432:5432"
+    volumes:
+      # 非常重要！設錯會導致資料丟失
+      # 指定資料夾放置實體檔案，分號前面是主機資料夾，後面是容器資料夾
+      # ./data 代表此docker-compose.yml 所在位置下的資料夾
+      # /var/lib/postgresql/18/main 代表資料庫在容器內的路徑
+      # 注意!上述路徑會因為版本而異動,可能要上官網查一下最新版本的路徑
+      - ./data:/var/lib/postgresql/18/docker

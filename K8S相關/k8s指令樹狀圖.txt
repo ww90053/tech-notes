@@ -1,0 +1,74 @@
+只要在終端機中由上往下穿過目錄，用空白鍵串接，就能組合出所有維運所需的指令：
+
+kubectl/
+├── 1. 叢集與環境管理 (Cluster Info & Context)
+│   ├── cluster-info (查看叢集基礎資訊與 Master 位址)
+│   ├── version (查看用戶端與伺服器端 K8s 版本)
+│   └── config (管理連線設定檔 ~/.kube/config)
+│       ├── view (列出當前所有設定內容)
+│       ├── get-contexts (列出所有可切換的叢集/帳號環境)
+│       ├── current-context (顯示目前正在使用的環境)
+│       └── use-context (切換到指定的叢集環境)
+│
+├── 2. 資源宣告與建立 (Create & Apply)
+│   ├── apply (宣告式管理：建立或更新 YAML 定義的資源)
+│   │   └── -f [檔名.yaml]
+│   ├── create (指令式建立：直接用參數建立資源)
+│   │   ├── deployment [名稱] --image=[映像檔]
+│   │   ├── service [類型] [名稱]
+│   │   └── namespace [空間名稱]
+│   └── edit (直接在線上編輯運行中的資源 YAML)
+│       └── [資源類型] [資源名稱]
+│
+├── 3. 唯讀檢視與查詢 (Get & Describe)
+│   ├── get (列出資源清單簡要資訊)
+│   │   ├── nodes (查看主機狀態)
+│   │   ├── namespaces / ns (檢視命名空間)
+│   │   ├── deployments / deploy (檢視部署狀態)
+│   │   ├── pods / po (檢視容器組，可加 -o wide 看 IP，或 --watch 實時監控)
+│   │   ├── services / svc (檢視網路服務與 External IP)
+│   │   └── ingresses / ing (檢視對外路由規則)
+│   └── describe (查詢特定資源的詳細規格、狀態與事件歷史，排錯必備)
+│       ├── nodes [節點名稱]
+│       └── pods [Pod名稱]
+│
+├── 4. 日常維運與除錯 (Troubleshooting & Exec)
+│   ├── logs (串流輸出容器日誌)
+│   │   └── [Pod名稱] (可加 -f 進行即時追蹤，或 -c 指定特定容器)
+│   ├── exec (進入容器內部執行指令)
+│   │   └── -it [Pod名稱] -- [指令，如 bash 或 sh]
+│   ├── port-forward (將本地連接埠轉發到 Pod/Service，用於本機測試)
+│   │   └── [Pod名稱] [本地Port]:[容器Port]
+│   └── cp (在本地主機與容器之間複製檔案)
+│       └── [本地路徑] [Pod名稱]:[容器內路徑]
+│
+├── 5. 應用程式更新與調整 (Rollout & Scale)
+│   ├── scale (線上快速調整 Pod 的副本數量)
+│   │   └── deployment [部署名稱] --replicas=[數量]
+│   └── rollout (管理版本更新與回滾)
+│       ├── status deployment/[部署名稱] (查看更新進度)
+│       ├── history deployment/[部署名稱] (查看版本歷史紀錄)
+│       └── undo deployment/[部署名稱] (一鍵回滾到上一個版本)
+│
+├── 6. 節點維護 (Node Maintenance)
+│   ├── cordon (標記節點為不可調度，禁止新 Pod 建立在此)
+│   │   └── [節點名稱]
+│   ├── drain (驅逐節點上所有的 Pod，用於主機關機維護)
+│   │   └── [節點名稱] --ignore-daemonsets
+│   └── uncordon (恢復節點，允許新 Pod 調度進來)
+│       └── [節點名稱]
+│
+└── 7. 資源清理 (Delete)
+    └── delete (刪除指定的資源)
+        ├── -f [檔名.yaml] (依據 YAML 檔案內容刪除)
+        ├── pod [Pod名稱]
+        └── deployment [部署名稱]
+
+## 💡 全域通用的小技巧（側邊分支出去）：
+不論您走到哪一個分支，最後都可以加上這兩個重要參數：
+
+* -n [命名空間名稱]：指定去哪一個特定房間（Namespace）執行指令（預設是 default）。
+* -A 或 --all-namespaces：通殺！一次查看全叢集所有房間的資源（常搭配 kubectl get pods -A）。
+
+您目前在操作中，最常遇到哪一種類型的任務呢？（例如：部署新服務、看日誌排錯、還是管理主機節點？）我可以針對該分支為您補充更精準的進階指令！
+

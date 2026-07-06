@@ -1,0 +1,34 @@
+
+如果想要架新站台,或者更換Line OA,綁定的過程如下
+
+-前台網站要架起來
+	-要先更新到最新版本
+	-要記得上傳images的圖片
+		-\\images\\before_login.jpg
+		-\\images\\after_login.jpg
+	-記下WebHook的網址,EX: https://serviceweb036.iscom.com.tw/Mobile/WebHook
+	-確保防火牆是雙向透通的,可呼叫Line API官網，也能被官網呼叫此網站
+-設定LineOA的WebHook的網址
+	-登入LineOA官方帳號
+	-設定>Messaging API,Webhook網址可以修改
+-取得API ID等資訊,更新到config檔案上
+	-ChannelAccessToken (這個我沒有找到?麻煩知道的人補充一下?)
+	-Channel ID 
+	-Channel secret
+-透過Line APP,下指令更新選單
+	-打開Line APP,找到當前的Line OA帳號
+	-指令:addmenuA
+	-指令:addmenuB
+	-這樣就可以把新圖片上傳到Line OA
+	(會搞到那麼麻煩,似乎是因為高農給人家要求比較畸形的選單?
+	正常來說,選單給人家乖乖六格就好,偏偏要搞八格?
+	否則其實透過LineOA官方的管理介面設定圖文選單即可)
+	
+-備註:
+	-相關程式碼請參考git 
+		\01_SourceCode\WebSite\Controllers\MobileController.cs
+		\01_SourceCode\WebSite\Models\LineApi.cs
+			public static string AddMenu(string token, string userId , bool isLogin)
+		\01_SourceCode\WebSite\Models\LineReceive.cs
+		private static void HandleText(bool isBinded, string token, string userId, string commandText)
+	

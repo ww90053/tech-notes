@@ -1,0 +1,24 @@
+# 伺服器一開始預設無法提供ssh連線
+# 需要安裝openssh-server才能使用
+
+# 1. 安裝 SSH Server
+sudo apt update
+sudo apt install openssh-server -y
+
+# 2. 啟動並檢查狀態
+# 安裝完後，服務通常會自動啟動。你可以再次確認：
+sudo systemctl status ssh
+
+#=======
+應該會看到以下
+user@TestingMA-AP:~$ sudo systemctl status ssh
+○ ssh.service - OpenBSD Secure Shell server
+     Loaded: loaded (/usr/lib/systemd/system/ssh.service; disabled; preset: enabled)
+     Active: inactive (dead)
+TriggeredBy: ● ssh.socket
+       Docs: man:sshd(8)
+             man:sshd_config(5)
+#=======
+
+回到PC端,登入看看可否連線
+ssh user@ServerIP

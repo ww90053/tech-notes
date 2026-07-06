@@ -1,0 +1,41 @@
+services:
+  # 定義應用程式服務（包含 Web 網站與背景排程）
+  myapp:
+    # 映像檔名稱與標籤
+    image: myrepo/myapp:latest
+    # 設定容器環境變數
+    environment:
+      # 資料庫連線字串，Host=db 指向下方定義的 db 服務
+      - ConnectionStrings__DefaultConnection=Host=db;Database=mydb;Username=postgres;Password=${DB_PASSWORD}
+    # 埠號映射 [主機實體埠:容器內部埠]
+    ports:
+      - "80:8080"
+    # 設定服務啟動的依賴關係
+    depends_on:
+      # 依賴於 db 服務
+      db:
+        # 關鍵：必須等到 db 健康檢查通過（pg_isready）後才啟動此容器
+        condition: service_healthy
+
+  # 定義 PostgreSQL 資料庫服務
+  db:
+    # 使用 Alpine 版本以縮減映像檔體積並提高安全性
+    image: postgres:16-alpine
+    # 設定資料庫環境變數
+    environment:
+      # 設定資料庫超級管理員的密碼（變數通常自 .env 取得）
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    # 設定資料持久化掛載 [主機路徑:容器內路徑]
+    volumes:
+      # 將主機路徑映射至容器資料庫存放點，建議 ./data 放在大容量硬碟分區
+      - ./data:/var/lib/postgresql/data
+    # 定義資料庫健康狀態偵測機制
+    healthcheck:
+      # 使用 pg_isready 工具確認 PostgreSQL 是否已準備好接受連線
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      # 每隔 5 秒執行一次檢查
+      interval: 5s
+      # 每次檢查指令的逾時時間為 5 秒
+      timeout: 5s
+      # 連續失敗 5 次後，將此容器標記為不健康
+      retries: 5

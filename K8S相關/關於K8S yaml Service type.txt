@@ -1,0 +1,50 @@
+Service type這段通常被宣告在最下面
+```
+# 定義 Service 的主要規格
+spec:
+  # 選擇要被此 Service 代理流量的 Pod 標籤
+  selector:
+    # 只有 app: information-system 的 Pod 會被選入
+    app: information-system
+  # 定義 Service 對外提供的埠設定
+  ports:
+  # 定義第一組埠對映規則
+  - protocol: TCP
+    # Service 在叢集內提供的埠號
+    port: 8081
+    # 轉送到 Pod 內容器的目標埠號
+    targetPort: 8080
+  # 指定 Service 類型為 LoadBalancer（對外提供負載平衡）
+  type: LoadBalancer
+```
+
+Kubernetes 的 4 種 Service type
+1. ClusterIP（預設值：限內部通訊）
+怎麼運作： K8S 會分配一個只有「叢集內部成員」才看得懂的虛擬 IP。
+
+對外開放： 完全不對外開放。
+
+適用場景： 資料庫（MySQL、MongoDB）、內部快取（Redis）、或是只有後端 API 會連，但前端瀏覽器不需要直接連線的私密服務。
+
+2. NodePort（開闢一扇高樓層的後門）
+怎麼運作： K8S 會在叢集的每一個節點（Node/也就是你的實體機器）上，硬開一個指定的高編號通訊埠（範圍固定在 30000 - 32767 之間）。
+
+對外開放： 可以對外。任何人只要連到 你的機器IP:隨機高埠號，就能連進服務。
+
+在 Docker Desktop 測試： 如果你設定 NodePort 並指定 nodePort: 32000，你就可以直接用 http://localhost:32000 連上網頁。
+
+適用場景： 臨時想對外測試、或是公司內部環境沒有雲端負載平衡器，又想讓別台實體電腦連進來時。
+
+3. LoadBalancer（正式對外開大門：前一輪介紹的方法）
+怎麼運作： 它是 NodePort 的升級版。除了具備 NodePort 的功能，它還會去呼叫底層環境（雲端廠商如 AWS、或是本地的 Docker Desktop），直接配發一個「外部專用 IP」或綁定 localhost。
+
+對外開放： 完美的對外開放，可以使用標準的 80 或 8081、8082 等你想要的埠號，不需要去記難記的 3 萬多號。
+
+適用場景： 正式上線的專案、對外公開的網站。
+
+4. ExternalName（對外的任意門：非常特殊）
+怎麼運作： 它不幫你內部的 Pod 導流量，相反地，它是用來當作「內部連到外面」的別名（DNS CNAME）。
+
+舉個例子： 假設你的程式想連公司的實體資料庫 my-db.company.com。你可以建一個 ExternalName 的 Service 叫 prod-db。你的 K8S 程式只要連 prod-db，K8S 就會自動幫你轉跳到外面的 my-db.company.com。
+
+適用場景： 當 K8S 內部的服務，需要頻繁存取「叢集外部」的現成服務或雲端託管資料庫時。

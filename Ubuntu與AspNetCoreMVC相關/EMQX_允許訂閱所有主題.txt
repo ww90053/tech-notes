@@ -1,0 +1,14 @@
+先登入到後台
+左側 → Access Control → Authorization
+修改設置檔案
+
+原本長這樣子
+{deny, all, subscribe, ["$SYS/#", {eq, "#"}, {eq, "+/#"}]}.
+
+改成
+
+{deny, all, subscribe, ["$SYS/#"]}.
+
+也就是把, {eq, "#"}, {eq, "+/#"}拿掉
+按下下方的更新
+這樣就能用#訂閱資料了

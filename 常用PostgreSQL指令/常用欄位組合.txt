@@ -1,0 +1,10 @@
+﻿#常用變數
+英數字/短中文字				VARCHAR(100)
+很長的文字					TEXT
+整數						int
+大整數						bigint
+精確小數					DECIMAL(19,4) 或 NUMERIC
+布林						BOOLEAN
+日期						DATE
+日期時間(單純,不跨時區)		TIMESTAMP without time zone	(補充:timestamp(3)的精度剛好跟C#符合)
+日期時間且想要跨時區同步	TIMESTAMP WITH TIME ZONE

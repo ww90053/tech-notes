@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>CodePen - 民國年日期選擇器</title>
+
+	<!-- jQuery 3.6.0 -->
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js" ></script>
+
+	<!-- jQuery UI 1.13.2 -->
+	<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js" ></script>
+	
+	<!-- jQuery UI 1.13.2 CSS -->
+	<link rel="stylesheet" 
+      href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css"/>
+	  
+    <!-- 民國年日期選擇器 -->
+    <script src="./jqueryui-datepicker-zh/DatepickerTW.js"></script>
+    <!-- 民國年日期選擇器 -->
+    <link href="./jqueryui-datepicker-zh/jquery-ui-datepicker.css" rel="stylesheet"/>
+
+	<!-- 月曆icon用 -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+</head>
+<body>
+<!-- partial:index.partial.html -->
+</h2>
+	請輸入民國年日期
+	<label for="myDate">
+		<input type="text" class="datepickerTW" id="myDate" data-hidden-id="startDateHidden" value="115/03/09" style="width:80px" >
+		<!-- Font Awesome 日曆圖示 -->
+		<i class="fa fa-calendar" aria-hidden="true" style="cursor:pointer;" id="calendarBtn"></i>
+	</label>
+	<br />
+	連動同步隱藏的西元年
+    <input type="text" id="startDateHidden" value="2026/03/09" >
+	
+	<br />
+<script type="text/javascript">
+	//所有class為datepickerTW者,輸入為民國年日期
+    $('.datepickerTW').datepickerTW(
+		{
+		onSelect: function(dateText,elem) {
+				var hiddenId = $(elem.input[0]).attr('data-hidden-id');
+				console.log(hiddenId);
+				// 如果需要寫入 hidden input
+				if (hiddenId) {
+					$('#' + hiddenId).val(dateText);
+				}
+		   }
+		   
+		}
+	);
+</script>
+
+
+</body>
+</html>

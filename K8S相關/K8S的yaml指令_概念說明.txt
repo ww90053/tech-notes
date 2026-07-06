@@ -1,0 +1,45 @@
+K8S運行設定基本仰賴yaml指令
+這段需要先定義好,也是最麻煩的環節
+大多數yaml指令會被串在一起運行,中間以 --- 符號分隔
+EX:
+```
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: concordtechmqtt-secret
+type: Opaque
+stringData:
+  MQTT_USERNAME: "muser"
+  MQTT_PASSWORD: "*****"
+  REDIS_PASSWORD: ""
+  ConnectionStrings__DefaultConnection: "Data Source=192.168.1.30\\SQL2016;Initial Catalog=TestIoTDB_V3;Persist Security Info=True;User ID=iscom;Password=*******;TrustServerCertificate=True;Connect Timeout=180"
+  ConnectionStrings__RawdataDBConnection: "Data Source=192.168.1.30\\SQL2016;Initial Catalog=TestIoTDB_recIoTRawData;Persist Security Info=True;User ID=iscom;Password=*******;TrustServerCertificate=True;Connect Timeout=180"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: concordtechmqtt-config
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ALARM_PUSH_WEBSERVER: ""
+  ALARM_PUSH_ANDROID: "true"
+  ALARM_PUSH_IOS: "true"
+  ALARM_PUSH_TEAMS: "false"
+  ALARM_PUSH_API_ENDPOINT: "/api/PushNotification/Send"
+
+---
+```
+定義好之後,就透過指令運行
+kubectl apply -f my-app-all-in-one.yaml
+
+另外也是可以拆開
+my-web-app/  (專案資料夾)
+├── 01-configmap.yaml    # 專用參數
+├── 02-deployment.yaml   # 程式環境規格
+├── 03-service.yaml      # 內部網路
+└── 04-ingress.yaml      # 外部網路
+
+然後運行
+kubectl apply -f ./my-web-app/

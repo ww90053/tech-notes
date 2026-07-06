@@ -1,0 +1,28 @@
+# 說明
+- 相較於docker run，docker compose會比較適合正式佈署使用
+	- docker run
+		- 下指令就能跑,不用YAML檔案設定,指令會變得很複雜
+		- 一次只跑一個容器
+		- 對話關閉之後就沒有了
+		- 適合開發測試，測完關掉對話就收工
+	- docker compose
+		- 以YAML檔案設定，再搭配指令運行YAML檔，指令就相對單純
+		- 跑多個容器
+		- 可以永久執行
+		- 適合架站等正式情境
+- 策略：
+	- docker compose可以取代docker run
+		- 兩種方法其實都要學會頗複雜的指令，學習門檻其實差不多
+		- docker compose的YAML檔案可以留存在伺服器，也能納入版控
+		- docker run可以考慮保留開發端的指令即可，以便測試
+	- docker compose切分策略
+		- 由於docker compose可以跑多個容器，所以要考量
+			- 多個容器宣告在一個docker-compose.YAML檔
+			- 獨立分成多個docker-compose.YAML檔
+		- nginx建議獨立
+			- 每台網站伺服器主機只需要安裝一組即可
+			- 跟網站綁在一起，未來反而會影響擴充新站台
+		- 資料庫服務建議
+			- 因為有很高的機率資料庫還是會共用
+			- 除非資料庫服務真的很小，且幾乎100%確定被你的網站程式獨佔
+		- 網站前後台／排程程式，如果確定不會分開佈署，就可以透過docker compose一起運行

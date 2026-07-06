@@ -1,0 +1,82 @@
+SQL Server Always on的使用者設定筆記
+
+前言:
+在SQL Server Always on架構下,使用sa權限等帳號存取兩邊資料庫可以正常運行
+但如果要建立權限受限的帳號會有問題
+具體來說會發生建立了一組public權限帳號,結果只有當時建立帳號的主要資料庫可用
+通常是切換主要和次要資料庫後,會發生此組帳號無法存取資料庫的問題
+
+
+為了避免名詞混淆,以下需要明確定義
+SQL Server: 是資料庫管理系統 (DBMS),就是大家平常熟知的SQL Server
+資料庫:在SQL Server中建立出來的資料庫與實體檔案
+
+觀念:
+1.
+SQL Server的使用者，資料庫引擎和資料庫在設定上其實是分離的
+EX:
+	SQLServer:192.168.6.139 建立了帳號user01,並設定user01可以存取資料庫 TESTDB01
+	其實要分成兩段來看
+	1
+	在SQLServer:192.168.6.139 建立了帳號user01
+	2
+	設定資料庫TESTDB01,允許帳號user01存取它
+	因此TESTDB01的安全性裡面可以看到user01的權限設定
+	這也是為什麼,從正式主機備份回開發端的資料庫,裡面都會看到正式環境使用者存取此資料庫的設定
+	也就是說,"TESTDB01可以讓user01存取"的權限設定就是綁在TESTDB01資料庫裏面
+
+2.	
+-SQL Always on ,本質上就是兩台資料庫主機,不斷同步彼此的資料庫內容
+EX:
+SQLServer:192.168.6.139/192.168.6.136,做SQL Always on,同步的資料庫叫:TESTDB01
+	
+所以會發生
+-在SQLServer:192.168.6.139 建立了帳號user01
+-在資料庫TESTDB01,允許帳號user01存取它
+-資料庫TESTDB01被同步到兩台主機
+-但是在192.168.6.136,根本就還沒有帳號user01
+
+3.
+但是去次要資料庫,手動建立相同帳號的使用者,依舊會無法正常授權存取資料庫
+那是因為資料庫識別權限設定是透過SID辨識,而非帳號名稱
+所以就會發生
+去次要資料庫建立使用者的過程,需要指定此使用者的SID
+
+
+有點像是兩國人規劃了一個共用空間
+但當初設定允許.139國的user01人員進出.沒有允許.136國的user01人員進出
+且進出是核對該國的身分證號碼,但一般情況下,即使是同一人,在兩國也不會有相同的身分證
+正確的做法是讓此人同時屬於兩國,且有相同的身分證號碼
+
+============================
+具體新增使用者的方法
+-先去主要資料庫新增使用者,設定照常即可,記得記下設定的密碼
+-然後去次要資料庫,應該會發現使用者還沒建立,但資料庫本身已經有使用者了
+
+1.
+先回到主要資料庫,知道此使用者的SID
+SELECT SUSER_SID ('user01')
+EX:
+0xE22D42A727E85349A69427815A230553
+
+2.
+一樣在主要資料庫,去最外層的安全性資料夾,準備好此使用者的Create指令,右鍵產生指令碼
+EX:
+USE [master]
+GO
+CREATE LOGIN [KM2_EBOOK] WITH PASSWORD='XXXXXXXXX'
+, DEFAULT_DATABASE=[master], DEFAULT_LANGUAGE=[繁體中文], CHECK_EXPIRATION=OFF, CHECK_POLICY=ON
+GO
+
+3.補上SID,這樣就得到可以同步兩邊的使用者的SQL指令
+
+USE [master]
+GO
+CREATE LOGIN [KM2_EBOOK] WITH PASSWORD='XXXXXXXXX',SID=0xE22D42A727E85349A69427815A230553
+, DEFAULT_DATABASE=[master], DEFAULT_LANGUAGE=[繁體中文], CHECK_EXPIRATION=OFF, CHECK_POLICY=ON
+GO
+
+4.去次要資料庫,執行上述SQL指令,這樣就能建立兩邊都能使用的帳號
+
+
+

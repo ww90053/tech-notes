@@ -1,0 +1,182 @@
+概述:
+要架站大概需要幾個步驟
+-安裝 .NET 10 執行階段 (Runtime)
+-準備好網站發布檔案
+-上傳到Ubuntu伺服器
+-透過donet建置測試,確定網站與.NET可用
+-建立啟動donet網站指令
+-安裝Nginx反向代理
+-設定Nginx反向代理,指向需要的port 80/443
+-啟動donet網站,測試port 80能否運行
+-設定開機排程,讓重新啟動的時候也能運行
+
+===================================================
+# 更新系統套件
+
+sudo apt update
+===================================================
+安裝 .NET 10 執行階段 (Runtime)
+
+在 Ubuntu 上，需要安裝對應版本的執行階段來跑網站。
+(本次用的是Ubuntu 24.04)
+Ubuntu 24.04 及更新版本：
+# 直接從官方倉庫安裝：
+sudo apt install dotnet-runtime-10.0
+
+舊版 Ubuntu (如 22.04)：
+# 需先新增 Backports PPA：
+sudo add-apt-repository ppa:dotnet/backports
+sudo apt install dotnet-runtime-10.0
+===================================================
+#準備好網站發布檔案
+-這邊用Asp Net Core MVC
+-版本.Net 10
+-發布環境為Linux X64
+-用ZIP壓縮
+-記住網站專案檔對應的dll檔案,這邊為Backend.dll
+-建議ZIP壓縮
+
+然後發布網站檔案,ZIP壓縮後上傳到Ubuntu伺服器
+透過RDP或者SFTP上傳
+===================================================
+# 安裝解壓縮工具(已經有裝可以略過)
+# 首先確保系統有 unzip：
+sudo apt install -y unzip
+
+# 假設壓縮檔案路徑 /home/user/Downloads/publish.zip
+# 假設網站路徑 /var/www/website1
+# 使用 sudo 確保有權限寫入 /var/www/website1
+# -d 參數代表指定解壓縮的目標路徑
+sudo unzip /home/user/Downloads/publish.zip -d /var/www/website1
+===================================================
+# dotnet測試能不能跑
+# cd 網站資料夾
+cd /var/www/website1/publish
+# dotnet 網站.dll --urls "http://0.0.0.0:任意port"
+dotnet Backend.dll --urls "http://0.0.0.0:5000"
+
+先用瀏覽器先確認看看 5000 port站台是否能跑
+http://XXX.XXX.XXX.XXX:5000/
+===================================================
+# 建立啟動donet網站指令
+這個步驟是為了方便啟動站台,把上面的啟動指令宣告為sh指令
+
+在您的應用程式目錄下建立一個 .sh 檔案：
+sudo nano /var/www/website1/start-app.sh
+#----------------
+#!/bin/bash
+# 可以在這裡加入啟動前的自定義指令
+echo "正在啟動 .NET 10 網站..."
+
+# cd 網站資料夾
+cd /var/www/website1/publish
+# dotnet 網站.dll --urls "http://0.0.0.0:任意port"
+/usr/bin/dotnet Backend.dll --urls "http://0.0.0.0:5000"
+#----------------
+
+#呼叫啟動網站的指令
+sudo /var/www/website1/start-app.sh
+===================================================
+配置 Nginx 反向代理
+由於 .NET 內建的 Kestrel 伺服器不建議直接暴露於網際網路，通常會使用 Nginx 作為前端代理。
+# 安裝 Nginx： 
+sudo apt install nginx
+
+# 預設的設定設定檔： 在 /etc/nginx/sites-available/default
+# (可選)從default複製一個做為新網站用,然後改掉
+# 跳過這個步驟也沒關係,把下面nginx檔案內容複製貼上亦可
+# sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/website1
+# 設定，將流量轉發至 Kestrel（預設埠為 5000）。
+sudo nano /etc/nginx/sites-available/website1
+
+#----------nginx檔案內容----------
+server {
+    listen 80;
+    server_name _; # 如果有網域請填網域，沒有就維持 _ (代表監聽所有 IP)
+
+    # 1. 指定靜態檔案目錄 (這很重要，Nginx 處理圖片、CSS 比 Kestrel 快)
+    root /var/www/website1/publish/wwwroot;
+
+    # 2. 處理靜態檔案請求
+    location / {
+        proxy_pass         http://localhost:5000; # 轉發給 Kestrel
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade $http_upgrade;
+        proxy_set_header   Connection keep-alive;
+        proxy_set_header   Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+
+        # 3. 增加上傳檔案大小限制 (預設只有 1MB，MVC 常會爆掉)
+        client_max_body_size 50m; 
+
+        # 4. 設定逾時時間 (避免較慢的查詢導致 504 Gateway Timeout)
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 300s;
+    }
+
+    # 5. 讓 Nginx 直接處理 wwwroot 內的靜態資源，減輕 .NET 負擔
+    location ~* \.(?:css|js|jpg|jpeg|gif|png|ico|cur|gz|svg|svgz|mp4|ogg|ogv|webm|htc)$ {
+        root /var/www/website1/publish/wwwroot;
+        expires 1M;
+        access_log off;
+        add_header Cache-Control "public";
+    }
+}
+#----------檔案內容----------
+
+啟用設定 (關鍵捷徑)
+# Nginx 只會讀取 sites-enabled 資料夾裡的檔案。我們要建立一個「軟連結」：
+sudo ln -s /etc/nginx/sites-available/website1 /etc/nginx/sites-enabled/
+# 移除掉sites-enabled 資料夾原本的default的連結
+sudo rm /etc/nginx/sites-enabled/default
+
+# 檢查語法
+sudo nginx -t
+
+# 重啟nginx服務,讓設定生效
+sudo systemctl restart nginx
+===================================================
+啟動donet網站,測試port 80能否運行
+#呼叫啟動先前設定好的網站的指令
+sudo /var/www/website1/start-app.sh
+
+沒意外的話,可以在80 port瀏覽網站
+=================================================== 
+設定 Systemd 守護進程 (Service)
+為了確保網站能在開機後自動啟動，或在當機時自動重啟，需將其掛載為 Linux 服務。 
+
+# 建立 Systemd 服務檔案
+# 在 /etc/systemd/system/ 目錄下建立一個服務設定檔（例如 kestrel-dotnet10.service）：
+sudo nano /etc/systemd/system/kestrel-website1.service
+
+#----------檔案內容----------
+[Unit]
+Description=.NET 10 Website Running on Ubuntu
+
+[Service]
+WorkingDirectory=/var/www/website1
+# 加上 /bin/bash 來執行你的腳本
+ExecStart=/bin/bash /var/www/website1/start-app.sh
+Restart=always
+#如果服務崩潰，10 秒後自動重啟
+RestartSec=10
+KillSignal=SIGINT
+SyslogIdentifier=dotnet-example
+#目前登入的使用者
+User=user
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+
+[Install]
+WantedBy=multi-user.target
+#----------檔案內容----------
+
+#啟動排程
+#重新載入系統設定
+sudo systemctl daemon-reload
+#啟用
+sudo systemctl enable kestrel-website1.service
+#執行
+sudo systemctl start kestrel-website1.service

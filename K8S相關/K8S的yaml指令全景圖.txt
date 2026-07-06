@@ -1,0 +1,34 @@
+一個完整的 K8s 專案設定檔 (全景圖)
+│
+├── 🔴【設定積木】kind: ConfigMap (定義各程式專用的參數)
+│   ├── metadata.name: my-web-config
+│   └── data:
+│       └── index.html: "<h1>歡迎光臨我的網站</h1>"  # 網頁內容抽離出來放這裡
+│
+├── 🔵【工廠積木】kind: Deployment (定義程式運行環境的規格)
+│   ├── metadata.name: my-web-deployment
+│   └── spec:
+│       ├── replicas: 3                          # 負責生產 3 個 Pod 生力軍
+│       ├── selector.matchLabels.app: web-pod    # 🎯 負責管理帶有這個標籤的 Pod
+│       └── template:
+│           ├── metadata.labels.app: web-pod     # 🏷️ 生產出來的 Pod 貼上此標籤
+│           └── spec.containers[0]:
+│               ├── name: nginx
+│               └── volumeMounts:                 # 掛載上面的 ConfigMap 進來用
+│                   └── name: config-volume
+│
+├── 🟢【網路積木】kind: Service (定義內部網路連線)
+│   ├── metadata.name: my-web-service
+│   └── spec:
+│       ├── selector.app: web-pod                # 🎯 磁鐵效能！自動吸附所有帶此標籤的 Pod
+│       └── ports[0]:
+│           ├── port: 80                         # 服務對外的 Port
+│           └── targetPort: 80                   # 轉發給 Pod 內部容器的 Port
+│
+└── 🟡【大門積木】kind: Ingress (定義外部網路連線)
+    ├── metadata.name: my-web-ingress
+    └── spec:
+        └── rules[0]:
+            ├── host: my-website.com             # 綁定網域
+            └── http.paths[0].backend.service:
+                └── name: my-web-service         # 🎯 負責將特定網域流量導給上面的 Service

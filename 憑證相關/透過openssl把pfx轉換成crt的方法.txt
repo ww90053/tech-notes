@@ -1,0 +1,77 @@
+前言：
+由於Windows的IIS匯出的憑證是.pfx
+linux主機通常則用憑證.crt + .key
+所以需要知道怎麼轉換
+
+概念：
+三種檔案的用途是這樣
+.pfx憑證 = 公鑰+私鑰+簽章資訊
+.crt憑證 = 公鑰+簽章資訊
+.key檔案 = 私鑰
+
+所以轉換大概流程是這樣
+.pfx憑證 => 有加密的私鑰 => 沒加密的私鑰(.key)
+.pfx憑證 => .crt憑證
+(可選).pfx憑證 => .crt中繼憑證
+(可選).crt憑證 + .crt中繼憑證 => .crt完整串鍊憑證
+
+最後把 .key + .crt(憑證/完整串鍊憑證) 安裝到Linux主機Nginx
+==============
+首先pc要安裝openssl
+
+步驟 1：提取私鑰 (Private Key)
+首先，從 .pfx 檔案中提取加密的私鑰。系統會要求你輸入該 PFX 檔案的密碼。
+#Bash
+openssl pkcs12 -in myserver.pfx -nocerts -out myserver.key.pem
+
+會遇到訊息
+Enter Import Password: 輸入原本pfx憑證的密碼
+Enter PEM pass phrase: 輸入新PEM憑證的新密碼
+Verifying - Enter PEM pass phrase: 同上,再一次
+(如果不熟的話,新舊密碼都輸入一樣就好)
+
+
+注意： 此時產生的 myserver.key.pem 通常是被密碼保護的。如果你不希望每次啟動 Nginx 都要輸入密碼，可以使用以下指令將其解除加密：
+#Bash
+openssl rsa -in myserver.key.pem -out myserver.key
+
+會遇到訊息
+Enter pass phrase for myserver.key.pem: 輸入新PEM憑證的新密碼
+
+最後得到:myserver.key
+
+步驟 2：提取憑證 (Certificate)
+接著，提取出公鑰憑證檔案。
+
+#Bash
+openssl pkcs12 -in myserver.pfx -clcerts -nokeys -out myserver.crt
+
+(可選)步驟 3：提取中繼憑證 (CA Bundle / Intermediate Certificates)
+為了確保瀏覽器能完全信任你的憑證，通常需要包含中繼憑證。
+#Bash
+openssl pkcs12 -in myserver.pfx -nodes -nokeys -cacerts -out ca-bundle.crt
+如果匯出結果的檔案沒有內容,代表.pfx沒有中繼憑證
+
+(可選)步驟 4：合併憑證鏈 (Optional but Recommended)
+Nginx 建議將伺服器憑證與中繼憑證合併成一個 .crt 或 .pem 檔案。順序必須是：個人憑證在前，中繼憑證在後。
+
+#Bash
+cat myserver.crt ca-bundle.crt > fullchain.crt
+
+步驟 5：配置 Nginx
+最後，在你的 Nginx 設定檔（例如 /etc/nginx/sites-enabled/default）中指向這兩個檔案：
+
+Nginx
+server {
+    listen 443 ssl;
+    server_name yourdomain.com;
+
+    # 指向剛剛產生的合併憑證
+    ssl_certificate /path/to/fullchain.crt;
+
+    # 指向解密後的私鑰
+    ssl_certificate_key /path/to/myserver.key;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+}

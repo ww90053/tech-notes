@@ -1,0 +1,18 @@
+可以利用以下網站，生成臨時的webhook
+
+https://webhook.site/
+
+介面上會提供一組隨機的連結
+ＥＸ：
+https://webhook.site/74bd24e1-f13e-4892-bc66-cac5bac0c0d6
+
+然後它就能作為LineOA的Webhook網址使用
+
+上述網址點進去會看到一段訊息與超連結
+This URL has no default content configured. Change response in Webhook.site.
+
+會引導你到類似後台的地方查看紀錄
+ＥＸ：
+https://webhook.site/#!/edit/74bd24e1-f13e-4892-bc66-cac5bac0c0d6
+
+裡面就能觀察webhook接收到的資料

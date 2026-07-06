@@ -1,0 +1,11 @@
+# 說明
+- 主要是針對電腦版建立docker環境,可支援Windows作業系統
+- 官方網站網址:https://www.docker.com/products/docker-desktop/
+- 注意!雖然有提供UI介面,但是並非所有操作都能透過UI處理
+- 例如:
+	- docker build 需要透過指令建立
+	- docker compose up也得透過指令
+- docker-desktop的定位,比較像是
+	- 提供PC版docker環境
+	- 方便審視image
+	- 方便審視container
