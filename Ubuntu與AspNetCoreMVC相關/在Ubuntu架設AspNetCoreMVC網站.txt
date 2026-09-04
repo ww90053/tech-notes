@@ -140,11 +140,11 @@ sudo systemctl restart nginx
 ===================================================
 啟動donet網站,測試port 80能否運行
 #呼叫啟動先前設定好的網站的指令
-sudo /var/www/website1/start-app.sh
+sudo bash /var/www/website1/start-app.sh
 
 沒意外的話,可以在80 port瀏覽網站
 =================================================== 
-設定 Systemd 守護進程 (Service)
+#設定 Systemd 守護進程 (Service)
 為了確保網站能在開機後自動啟動，或在當機時自動重啟，需將其掛載為 Linux 服務。 
 
 # 建立 Systemd 服務檔案

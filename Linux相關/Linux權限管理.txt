@@ -1,0 +1,38 @@
+Linux 權限管理核心架構
+├── 1. 權限核心概念
+│   ├── 對象身份
+│   │   ├── u (User)：檔案擁有者
+│   │   ├── g (Group)：所屬群組
+│   │   ├── o (Others)：其他使用者
+│   │   └── a (All)：所有人 (u + g + o)
+│   └── 權限類型
+│       ├── r (Read / 4)：讀取內容 / 列出目錄
+│       ├── w (Write / 2)：修改檔案 / 新增刪除目錄項目
+│       └── x (Execute / 1)：執行程式 / 進入目錄
+│
+├── 2. 身分與歸屬管理 (Ownership)
+│   ├── chown (Change Owner)
+│   │   ├── 改擁有者：chown user file
+│   │   ├── 同時改擁有者與群組：chown user:group file
+│   │   └── 遞迴套用：chown -R user:group dir/
+│   └── chgrp (Change Group)
+│       ├── 僅改群組：chgrp group file
+│       └── 遞迴套用：chgrp -R group dir/
+│
+├── 3. 權限模式變更 (chmod)
+│   ├── 八進位數字法 (r=4, w=2, x=1)
+│   │   ├── 755 (rwxr-xr-x)：常見程式、腳本、目錄
+│   │   ├── 644 (rw-r--r--)：標準一般檔案
+│   │   ├── 600 (rw-------)：敏感私鑰、個人憑證
+│   │   └── 777 (rwxrwxrwx)：完全開放 (高安全風險)
+│   └── 符號表示法 (+ / - / =)
+│       ├── 加減權限：chmod +x script.sh
+│       ├── 依對象移除：chmod o-w file.txt
+│       └── 依對象賦值：chmod go=r file.txt
+│
+└── 4. 實務協作流程 (Best Practice)
+    ├── Step 1. 指定身分：sudo chown -R deployer:www-data /dir
+    ├── Step 2. 設定權限：
+    │   ├── 目錄 (775)：可進入、可檢視、可寫入
+    │   └── 檔案 (664)：讀寫權限限制在擁有者與群組
+    └── Step 3. 共享目錄鎖定：chmod g+s /dir (設定 SGID，新建檔案自動繼承群組)

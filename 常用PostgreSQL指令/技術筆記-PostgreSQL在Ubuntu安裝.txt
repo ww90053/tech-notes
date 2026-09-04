@@ -10,7 +10,21 @@ sudo apt install postgresql postgresql-contrib
 補充:
 apt會自動根據作業系統版本,判斷postgresql安裝的版本
 如果ubuntu版本不是最新版,則postgresql安裝的版本可能也不會是最新的
+例如 Ubuntu 24.04 LTS 預設提供的就是 PostgreSQL 16
+但如果跨版本安裝
+例如你在 Ubuntu 22.04 上想安裝 PostgreSQL 16（Ubuntu 內建沒有）。
+必須匯入 GPG 金鑰（手動指定特定版本）
 
+# 匯入官方 GPG 金鑰
+sudo install -d /etc/apt/keyrings
+sudo curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /etc/apt/keyrings/postgresql.asc
+
+# 加入官方儲存庫
+echo "deb [signed-by=/etc/apt/keyrings/postgresql.asc] http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+
+# 更新並安裝 PostgreSQL 16
+sudo apt update
+sudo apt install -y postgresql-16 postgresql-contrib-16
 =====
 
 2. 設定資料庫的管理使用者
@@ -42,6 +56,7 @@ psql
 
 # 設定帳號密碼
 ALTER USER 剛才建立的帳號名稱 WITH PASSWORD '你的密碼';
+ALTER USER iscom WITH PASSWORD '7o598966';
 
 =====
 補充:另外一個方法,但我沒測過
@@ -49,7 +64,7 @@ ALTER USER 剛才建立的帳號名稱 WITH PASSWORD '你的密碼';
 sudo -u postgres
 createuser --pwprompt --encrypted 帳號名稱
 =====
-
+# 剛才的sudo -i -u postgres指令,如果要換回當前登入者,請輸入exit
 
 3. 啟用資料庫可被遠端連線
 postgresql預設設定只允許localhost連線

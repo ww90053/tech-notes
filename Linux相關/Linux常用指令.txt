@@ -1,0 +1,48 @@
+參考 https://linux.vbird.org/linux_basic/redhat6.1/linux_06command.php
+
+Linux 常用指令分類大全
+├── 1. 檔案與目錄操作 (File & Directory Management)
+│   ├── ls       ：列出目錄內容 (常用: ls -la)
+│   ├── cd       ：切換工作目錄 (常用: cd ~, cd ..)
+│   ├── pwd      ：顯示目前所在絕對路徑
+│   ├── mkdir    ：建立新目錄 (常用: mkdir -p 建立多層目錄)
+│   ├── rm       ：刪除檔案或目錄 (常用: rm -rf 遞迴強制刪除，需慎用)
+│   ├── cp       ：複製檔案或目錄 (常用: cp -r 複製整個目錄)
+│   ├── mv       ：移動檔案/目錄，或重新命名
+│   └── touch    ：建立空檔案或更新檔案時間戳記
+│
+├── 2. 檔案權限與擁有者 (Permissions & Ownership)
+│   ├── chmod    ：變更檔案權限 (如: chmod 755 或 chmod +x)
+│   ├── chown    ：變更擁有者與群組 (如: chown user:group)
+│   └── umask    ：設定系統建立新檔時的預設權限遮罩
+│
+├── 3. 文字處理與搜尋 (Text Processing & Search)
+│   ├── cat      ：印出並串接檔案內容
+│   ├── less     ：分頁檢視大型檔案 (可上下捲動與搜尋)
+│   ├── tail     ：檢視檔案結尾 (常用: tail -f 即時監控日誌)
+│   ├── grep     ：搜尋文字內容或正規表達式 (常用: grep -r 遞迴搜尋)
+│   ├── find     ：依條件搜尋檔案 (常用: find /path -name "file*")
+│   ├── awk      ：強大的文字資料分析與報表處理工具
+│   └── sed      ：串流編輯器，常作文字取代 (如: sed 's/舊/新/g')
+│
+├── 4. 系統與效能監控 (System & Process Monitoring)
+│   ├── top/htop ：即時監控系統資源、CPU/記憶體用量與行程狀態
+│   ├── ps       ：顯示目前系統的行程快照 (常用: ps aux)
+│   ├── kill     ：發送訊號終止行程 (常用: kill -9 PID 強制結束)
+│   ├── df       ：顯示檔案系統與磁碟空間使用量 (常用: df -h)
+│   ├── du       ：計算目錄或檔案佔用的磁碟空間 (常用: du -sh)
+│   ├── free     ：顯示系統實體記憶體與 Swap 狀態 (常用: free -m)
+│   └── uname    ：顯示系統核心與作業系統資訊 (常用: uname -a)
+│
+├── 5. 網路操作 (Networking)
+│   ├── ping     ：測試目標主機的網路連線狀態
+│   ├── curl     ：透過 URL 發送網路請求或測試 API
+│   ├── wget     ：從網路下載檔案
+│   ├── netstat  ：顯示網路連線、路由表與連接埠 (常用: netstat -tulnp)
+│   ├── ip       ：設定或顯示網路介面資訊 (如: ip addr 或 ip route)
+│   └── ssh      ：透過安全加密協定遠端登入伺服器
+│
+└── 6. 壓縮與解壓縮 (Archive & Compression)
+    ├── tar      ：打包與壓縮工具 (常用: tar -czvf 打包, tar -xzvf 解包)
+    ├── zip      ：將檔案壓縮為 .zip 格式
+    └── unzip    ：解壓縮 .zip 檔案

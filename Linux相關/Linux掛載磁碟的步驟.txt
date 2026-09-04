@@ -1,0 +1,103 @@
+這是在 Linux 環境下掛載全新資料磁碟的完整標準作業流程（SOP）。以下我們以**將全新的 500 GB 磁碟掛載到 `/var/www**` 為例，為你一步步梳理：
+
+### 步驟一：確認新磁碟的名稱
+
+在進行任何操作前，必須先找出系統配發給新磁碟的代號。
+
+```bash
+lsblk
+
+```
+```example
+ubuntu@apserver-6107144-iaas:/dev$ lsblk
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+vda    253:0    0  100G  0 disk
+└─vda1 253:1    0  100G  0 part /
+vdb    253:16   0  500G  0 disk
+```
+
+* **說明**：觀察輸出的樹狀圖，找到容量為 500G 且未標示掛載點（MOUNTPOINT）的磁碟，通常名稱會是 `vdb` 或 `sdb`。以下步驟皆以 `/dev/vdb` 作為範例。
+
+### 步驟二：格式化新磁碟
+
+為這塊未配置的磁碟建立檔案系統（File System），讓 Linux 能夠讀寫資料。
+
+```bash
+sudo mkfs.ext4 /dev/vdb
+
+```
+
+* **說明**：`ext4` 是 Linux 最普遍且穩定的檔案系統格式。**（注意：此步驟會清空該磁碟上的所有資料，請務必確認磁碟代號無誤）。**
+
+### 步驟三：建立掛載點與單次掛載
+
+建立對應的資料夾，並將磁碟與該資料夾對接。
+
+```bash
+# 1. 建立目標資料夾（若已存在則可省略）
+sudo mkdir -p /data
+
+# 2. 將磁碟掛載到該資料夾
+sudo mount /dev/vdb /data
+
+```
+
+### 步驟四：設定開機自動掛載（極重要）
+
+剛才的 `mount` 指令重開機會失效，必須將設定寫入系統配置檔。
+
+```bash
+# 1. 查詢磁碟的唯一識別碼（UUID）
+sudo blkid /dev/vdb
+# (記下輸出結果中 UUID="xxxxxx-xxxx-xxxx" 的字串)
+EX:
+/dev/vdb: UUID="b58d43c6-994f-4504-995c-142723d32103" BLOCK_SIZE="4096" TYPE="ext4"
+
+# 2. 編輯 fstab 設定檔
+sudo nano /etc/fstab
+
+```
+
+在檔案的最下方加入這一行（將 UUID 替換為你剛才查到的字串）：
+
+```text
+UUID=你的UUID字串   /掛載的路徑   ext4   defaults,nofail   0   2
+```
+EX:
+UUID=b58d43c6-994f-4504-995c-142723d32103   /data   ext4   defaults,nofail   0   2
+
+
+* **說明**：加入 `nofail` 參數是為了避免未來磁碟若發生異常，導致整台主機卡在開機畫面無法進入系統。
+存檔離開後，執行以下指令測試是否設定正確（若無任何報錯訊息，即代表成功）：
+
+```bash
+sudo mount -a
+
+```
+
+### 步驟五：修正擁有者與權限
+
+掛載後資料夾擁有者會被重置為 `root`，需修改權限讓你的帳號與網頁伺服器可以寫入。
+
+```bash
+# 將擁有者改為 Nginx/Apache 預設的 www-data，並讓群組擁有寫入權限
+sudo chown -R www-data:www-data /data
+sudo chmod -R 775 /data
+
+# 將你登入的 ubuntu 帳號加入 www-data 群組，方便日後上傳網頁檔案
+sudo usermod -aG www-data ubuntu
+
+```
+
+### 步驟六：最終驗證
+
+確認磁碟是否正確掛載並顯示對應容量。
+
+```bash
+df -h /data
+
+```
+
+---
+
+這樣就大功告成了！

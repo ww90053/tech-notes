@@ -1,0 +1,69 @@
+ASP_NET_MVC_Core_路徑解析架構_依相對路徑取得絕對路徑
+├── 一、 Windows 開發端 (本機 Visual Studio / IIS Express)
+│   │
+│   ├── 情境 1：存放於 {網站程式碼目錄}\wwwroot\
+│   │   ├── 建議設定：設定檔宣告 "wwwroot\FileStorage"
+│   │   ├── 正規取得 (有 DI)：IWebHostEnvironment.WebRootPath + "\FileStorage"
+│   │   │   └── 輸出：D:\SVN\...\06_Webs\WebAdmin\wwwroot\FileStorage
+│   │   └── 底層取得 (無 DI)：因執行檔在 bin\Debug 下，需利用尋找邏輯向上層查訪 wwwroot
+│   │       └── 輸出：D:\SVN\...\06_Webs\WebAdmin\wwwroot\FileStorage
+│   │
+│   └── 情境 2：存放於 {網站程式碼目錄}\{自定義相對路徑資料夾}\ (例如 "MyData")
+│       ├── 建議設定：設定檔宣告 "MyData"
+│       ├── 正規取得 (有 DI)：IWebHostEnvironment.ContentRootPath + "\MyData"
+│       │   └── 輸出：D:\SVN\...\06_Webs\WebAdmin\MyData
+│       └── 底層取得 (無 DI)：非常危險，直接用 BaseDirectory 會存入 bin\Debug\net8.0\MyData。強烈建議依賴設定檔給定絕對路徑。
+│
+└── 二、 Docker 容器環境 (發行編譯版, 假設根目錄為 /app)
+    │
+    ├── 情境 1：存放於 {網站程式碼目錄}/wwwroot/ 
+    │   ├── 建議設定：設定檔宣告 "wwwroot/FileStorage"
+    │   ├── 正規取得 (有 DI)：IWebHostEnvironment.WebRootPath + "/FileStorage"
+    │   │   └── 輸出：/app/wwwroot/FileStorage
+    │   └── 底層取得 (無 DI)：AppDomain.CurrentDomain.BaseDirectory + "wwwroot/FileStorage"
+    │       └── 輸出：/app/wwwroot/FileStorage
+    │
+    └── 情境 2：存放於 {網站程式碼目錄}/{自定義相對路徑資料夾}/ (例如 "MyData")
+        ├── 建議設定：設定檔宣告 "MyData"
+        ├── 正規取得 (有 DI)：IWebHostEnvironment.ContentRootPath + "/MyData"
+        │   └── 輸出：/app/MyData
+        └── 底層取得 (無 DI)：AppDomain.CurrentDomain.BaseDirectory + "MyData"
+            └── 輸出：/app/MyData
+
+# 檔案資料夾的可能用途
+- 定義：隨著系統使用，可能會自動產生或修改的檔案
+- 分類：是否要根據檔案儲存路徑,對照到網頁URL讀取?
+	- 確定放wwwroot
+		- js/logo圖片/css
+	- 確定不放wwwroot
+		- 系統暫存檔案
+		- 系統logs
+	- 需要討論
+		- 系統範本檔案
+		- 使用者上傳的附件
+
+# 需要決策的地方在於
+- Q:儲存檔案在wwwroot,是否可以容忍陌生人透過URL下載這些檔案?
+	- 是:
+		- 檔案有可能被使用者透過URL直接下載,有好有壞,方便但不安全
+		- 透過IWebHostEnvironment.WebRootPath抓取
+		- wwwroot資料夾內的檔案上傳資料夾與主機實體路徑對照,請自行設定docker組態或IIS虛擬目錄
+	- 否:
+		- 跟上面相反,安全但不方便
+		- 因為不能直接用URL抓檔案,需要額外寫讀取檔案的API功能,否則網站也無法顯示檔案圖片等
+- Q:如果不使用wwwroot,那要不要自訂儲存檔案資料夾的絕對路徑?
+	- 要:
+		- 多一組參數要設定
+		- 無腦抓自行設定的絕對路徑即可
+	- 不要:
+		- 可能少一組參數
+		- 透過相對路徑,但相對路徑資料夾得寫死,不寫死的話還是多一組參數
+		- 透過IWebHostEnvironment.ContentRootPath抓取
+	- 折衷作法
+		- 多一組參數,可設定絕對和相對路徑
+		- 程式邏輯要能分析此路徑是哪一種
+
+# 其他觀念筆記
+- 如果只是想要預防陌生人隨意下載檔案,手段有
+	- 讓檔案名稱變成沒有規則的亂碼
+	- 從下載檔案的API網址檢查登入者權限
