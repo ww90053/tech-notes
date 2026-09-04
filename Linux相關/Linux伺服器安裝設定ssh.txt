@@ -1,5 +1,7 @@
-# 伺服器一開始預設無法提供ssh連線
-# 需要安裝openssh-server才能使用
+# 說明
+- 某些伺服器一開始預設無法提供ssh連線，需要安裝openssh-server才能使用
+- 通常是「桌面版 Linux」的版本會遇到，等於是把Linux當個人電腦來用，就預設把遠端連線關閉的概念
+- 在絕大多數雲端虛擬主機，SSH 伺服器早已預裝且預設啟用
 
 # 1. 安裝 SSH Server
 sudo apt update
